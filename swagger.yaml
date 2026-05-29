@@ -1,0 +1,325 @@
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "Green API Gateway"
+  description: "Proxy-сервис для вызова методов Green API (WhatsApp)."
+host: localhost:8080
+basePath: /
+schemes:
+  - http
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+
+tags:
+  - name: green-api
+    description: Методы Green API
+
+paths:
+  /v1/green-api/settings:
+    post:
+      tags:
+        - green-api
+      summary: Получить настройки инстанса
+      operationId: greenApiGetSettings
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/GreenAPIGetRequest"
+      responses:
+        200:
+          description: Настройки инстанса
+          schema:
+            $ref: "#/definitions/GreenAPISettingsResponse"
+        400:
+          description: Неверные параметры запроса
+          schema:
+            $ref: "#/definitions/TransportError"
+        401:
+          description: Неверные idInstance или apiTokenInstance
+          schema:
+            $ref: "#/definitions/TransportError"
+        500:
+          description: Внутренняя ошибка
+          schema:
+            $ref: "#/definitions/TransportError"
+
+  /v1/green-api/state:
+    post:
+      tags:
+        - green-api
+      summary: Получить состояние авторизации инстанса
+      operationId: greenApiGetState
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/GreenAPIGetRequest"
+      responses:
+        200:
+          description: Состояние инстанса
+          schema:
+            $ref: "#/definitions/GreenAPIStateResponse"
+        400:
+          description: Неверные параметры запроса
+          schema:
+            $ref: "#/definitions/TransportError"
+        401:
+          description: Неверные учётные данные
+          schema:
+            $ref: "#/definitions/TransportError"
+        500:
+          description: Внутренняя ошибка
+          schema:
+            $ref: "#/definitions/TransportError"
+
+  /v1/green-api/send-message:
+    post:
+      tags:
+        - green-api
+      summary: Отправить текстовое сообщение
+      operationId: greenApiSendMessage
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/GreenAPISendMessageRequest"
+      responses:
+        200:
+          description: Сообщение поставлено в очередь
+          schema:
+            $ref: "#/definitions/GreenAPISendResponse"
+        400:
+          description: Неверные параметры запроса
+          schema:
+            $ref: "#/definitions/TransportError"
+        401:
+          description: Неверные учётные данные
+          schema:
+            $ref: "#/definitions/TransportError"
+        500:
+          description: Внутренняя ошибка
+          schema:
+            $ref: "#/definitions/TransportError"
+
+  /v1/green-api/send-file-by-url:
+    post:
+      tags:
+        - green-api
+      summary: Отправить файл по URL
+      operationId: greenApiSendFileByUrl
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/GreenAPISendFileByURLRequest"
+      responses:
+        200:
+          description: Файл поставлен в очередь
+          schema:
+            $ref: "#/definitions/GreenAPISendResponse"
+        400:
+          description: Неверные параметры запроса
+          schema:
+            $ref: "#/definitions/TransportError"
+        401:
+          description: Неверные учётные данные
+          schema:
+            $ref: "#/definitions/TransportError"
+        500:
+          description: Внутренняя ошибка
+          schema:
+            $ref: "#/definitions/TransportError"
+
+definitions:
+
+  GreenAPIGetRequest:
+    type: object
+    required:
+      - idInstance
+      - apiTokenInstance
+    properties:
+      idInstance:
+        type: string
+        minLength: 1
+      apiTokenInstance:
+        type: string
+        minLength: 1
+
+  GreenAPISendMessageRequest:
+    type: object
+    required:
+      - idInstance
+      - apiTokenInstance
+      - chatId
+      - message
+    properties:
+      idInstance:
+        type: string
+        minLength: 1
+      apiTokenInstance:
+        type: string
+        minLength: 1
+      chatId:
+        type: string
+        minLength: 1
+        description: "Формат: 79876543210@c.us (личный) или 120363043968066561@g.us (группа)"
+      message:
+        type: string
+        minLength: 1
+        maxLength: 20000
+      quotedMessageId:
+        type: string
+      linkPreview:
+        type: boolean
+
+  GreenAPISendFileByURLRequest:
+    type: object
+    required:
+      - idInstance
+      - apiTokenInstance
+      - chatId
+      - urlFile
+      - fileName
+    properties:
+      idInstance:
+        type: string
+        minLength: 1
+      apiTokenInstance:
+        type: string
+        minLength: 1
+      chatId:
+        type: string
+        minLength: 1
+      urlFile:
+        type: string
+        minLength: 1
+        description: "URL файла, должен начинаться с http:// или https://"
+      fileName:
+        type: string
+        minLength: 1
+        description: "Имя файла с расширением"
+      caption:
+        type: string
+        maxLength: 1024
+      quotedMessageId:
+        type: string
+
+  GreenAPISettingsResponse:
+    type: object
+    properties:
+      wid:
+        type: string
+      webhookUrl:
+        type: string
+      webhookUrlToken:
+        type: string
+      delaySendMessagesMilliseconds:
+        type: integer
+        format: int32
+      linkPreview:
+        type: boolean
+      autoTyping:
+        type: integer
+        format: int32
+      outgoingWebhook:
+        type: string
+        enum: [yes, no]
+      outgoingMessageWebhook:
+        type: string
+        enum: [yes, no]
+      outgoingAPIMessageWebhook:
+        type: string
+        enum: [yes, no]
+      incomingWebhook:
+        type: string
+        enum: [yes, no]
+      stateWebhook:
+        type: string
+        enum: [yes, no]
+      statusInstanceWebhook:
+        type: string
+        enum: [yes, no]
+      deviceWebhook:
+        type: string
+        enum: [yes, no]
+      pollMessageWebhook:
+        type: string
+        enum: [yes, no]
+      incomingCallWebhook:
+        type: string
+        enum: [yes, no]
+      incomingBlockWebhook:
+        type: string
+        enum: [yes, no]
+      editedMessageWebhook:
+        type: string
+        enum: [yes, no]
+      deletedMessageWebhook:
+        type: string
+        enum: [yes, no]
+      markIncomingMessagesReaded:
+        type: string
+        enum: [yes, no]
+      markIncomingMessagesReadedOnReply:
+        type: string
+        enum: [yes, no]
+      enableMessagesHistory:
+        type: string
+        enum: [yes, no]
+      keepOnlineStatus:
+        type: string
+        enum: [yes, no]
+      sharedSession:
+        type: string
+        enum: [yes, no]
+
+  GreenAPIStateResponse:
+    type: object
+    properties:
+      stateInstance:
+        type: string
+        enum:
+          - notAuthorized
+          - authorized
+          - blocked
+          - sleepMode
+          - starting
+          - yellowCard
+
+  GreenAPISendResponse:
+    type: object
+    required:
+      - idMessage
+    properties:
+      idMessage:
+        type: string
+
+  TransportError:
+    type: object
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: integer
+        format: int32
+        example: 400
+      message:
+        type: string
+        example: validation error
+      error:
+        type: string
+        example: green_api_bad_request
+      details:
+        type: string
+      transaction_id:
+        type: string
+        format: uuid
